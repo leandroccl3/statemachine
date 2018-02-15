@@ -19,6 +19,25 @@ int EXTRUSION = 0;
 int STOP = 0;
 int FIN = 0;
 
+//DEFINO CADA ESTADO CON SU CORRESPODIENTE FUNCIÓN DE SALIDA
+const FSM_State_t FSM_State[] PROGMEM= {
+// STATE STATE_FUNC
+{INICIO,Fcn_INICIO},
+{WARMING_UP,Fcn_WARMING_UP},
+{EXTRUSION,Fcn_EXTRUSION},
+{STOP,Fcn_STOP},
+{FIN,Fcn_FIN,
+};
+
+evento_parada_de_emergencia=0 fin_de_carrera_inferior=0 fin_de_carrera_superior=1
+
+const FSM_NextState_t FSM_NextState[] PROGMEM= {
+// STATE INPUT NEXT_STATE
+{State1,Event1,State2},
+{State2,Event2,State1},
+};
+
+
 void setup() {
   // initialize the button pin as a input:
   pinMode(button_parada_de_emergencia, INPUT);
@@ -66,3 +85,53 @@ void loop() {
   }
 
 }
+
+---------------------
+
+//http://playground.arduino.cc/uploads/Code/FSM.zip
+#include <FiniteStateMachine.h>
+ 
+const byte NUMBER_OF_STATES = 5; //how many states are we cycling through?
+ 
+//initialize states
+
+State INICIO = State(parada_de_emergencia=0,fin_de_carrera_inferior=0,fin_de_carrera_superior=1,parada_de_emergencia=1);
+State WARMING_UP = State(parada_de_emergencia=1,dT<212.5, dT>=212.5);
+State EXTRUSION = State(dT<212.5, parada_de_emergencia=1, fin_de_carrera_inferior=0,fin_de_carrera_inferior=1);
+State STOP = State(parada_de_emergencia=0,parada_de_emergencia=1);
+State FIN = State();
+
+State On = State(ledOn);
+State Off = State(ledOff);
+State FadeIn = State(ledFadeIn);
+State FadeOut = State(ledFadeOut);
+ 
+FSM ledStateMachine = FSM(On);     //initialize state machine, start in state: On
+ 
+Button button = Button(12,PULLUP); //initialize the button (wire between pin 12 and ground)
+LED led = LED(11);                 //initialize the LED
+byte buttonPresses = 0;            //counter variable, hols number of button presses
+ 
+void setup(){ /*nothing to setup*/ }
+ 
+//poor example, but then again; it's just an example
+void loop(){
+  if (button.uniquePress()){
+    //increment buttonPresses and constrain it to [ 0, 1, 2, 3 ]
+    buttonPresses = ++buttonPresses % NUMBER_OF_STATES;
+    switch (buttonPresses){
+      case 0: ledStateMachine.transitionTo(On); break;
+      case 1: ledStateMachine.transitionTo(Off); break;
+      case 2: ledStateMachine.transitionTo(FadeIn); break;
+      case 3: ledStateMachine.transitionTo(FadeOut); break;
+    }
+  }
+  ledStateMachine.update();
+}
+ 
+//utility functions
+void ledOn(){ led.on(); }
+void ledOff(){ led.off(); }
+void ledFadeIn(){ led.fadeIn(500); }
+void ledFadeOut(){ led.fadeOut(500); }
+//end utility functions
